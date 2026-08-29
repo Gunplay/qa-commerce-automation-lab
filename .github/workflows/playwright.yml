@@ -1,32 +1,115 @@
+# Назва workflow — відображається у вкладці "Actions" на GitHub
 name: Playwright E2E
 
+# Умови, за яких запускається workflow
 on:
   push:
     branches:
-      - main
-      - feat/playwright-setup
-  pull_request:
+      - main                     # запуск при пуші в main
+      - feat/playwright-setup    # запуск при пуші в цю фіча-гілку (зазвичай прибирають перед мержем)
+  pull_request:                  # запуск на кожен pull request, незалежно від цільової гілки
 
+# Список задач (jobs), які виконуються в рамках workflow
 jobs:
-  e2e:
-    name: Storefront smoke test
-    runs-on: ubuntu-latest
+  e2e:                            # ідентифікатор джоби (використовується у посиланнях, статусах тощо)
+    name: Storefront smoke test   # людиночитабельна назва джоби, показується в UI
+    runs-on: ubuntu-latest        # на якій ОС/образі виконується джоба
+    timeout-minutes: 20           # якщо джоба виконується довше — примусово зупиняється (захист від "зависання" на wait-циклах)
 
     steps:
+      # 1. Клонуємо репозиторій у робочу директорію раннера
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4   # офіційний action для checkout коду
 
+      # 2. Встановлюємо потрібну версію Node.js та кешуємо npm-залежності
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
+          node-version: 20     # версія Node.js, яку треба встановити
+          cache: npm           # кешувати ~/.npm між запусками — прискорює наступні збірки
 
+      # 3. Встановлюємо npm-залежності проєкту суворо за package-lock.json
       - name: Install dependencies
-        run: npm ci
+        run: npm ci    # "ci" замість "install" — детермінований, чистий інсталл, швидший у CI
 
+      # 4. Встановлюємо браузер Chromium разом з системними залежностями, потрібними Playwright
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
+        # --with-deps ставить системні бібліотеки (fonts, libs), без яких Chromium не запуститься на ubuntu-latest
 
+      # 5. Піднімаємо контейнер PostgreSQL у фоновому режимі через docker compose
+      - name: Start PostgreSQL
+        run: docker compose up -d postgres
+        # -d = detached, тобто команда одразу повертає керування, а контейнер лишається жити у фоні
+
+      # 6. Чекаємо, поки PostgreSQL стане "healthy" (тобто дійсно готовий приймати з'єднання)
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..30}; do                                   # максимум 30 спроб
+            if docker compose ps postgres | grep -q "healthy"; then  # перевіряємо статус healthcheck
+              echo "PostgreSQL is ready"
+              exit 0                                              # успіх — виходимо з кроку з кодом 0
+            fi
+            echo "Waiting for PostgreSQL..."
+            sleep 2                                                # пауза 2 секунди між спробами (макс. ~60с очікування)
+          done
+          docker compose ps    # якщо цикл вичерпався — виводимо стан контейнерів для діагностики в логах
+          exit 1                # завершуємо крок з помилкою, щоб job впала явно, а не тихо продовжила
+
+      # 7. Стартуємо backend і storefront у фоні ТА чекаємо їх готовності В МЕЖАХ ОДНОГО КРОКУ.
+      #    Важливо: якщо винести "npm run dev ... &" в окремий крок, GitHub Actions
+      #    може прибити фоновий процес по завершенні цього кроку (кожен run — новий shell).
+      #    Тому запуск і очікування об'єднані в один run-блок.
+      - name: Start backend and storefront, then wait until ready
+        run: |
+          npm run dev --workspace=apps/backend &     # запускаємо backend у фоні (& = фоновий процес)
+          BACKEND_PID=$!                              # зберігаємо PID backend-процесу (може знадобитись для дебагу)
+
+          npm run dev --workspace=apps/storefront &   # запускаємо storefront у фоні
+          STOREFRONT_PID=$!                            # зберігаємо PID storefront-процесу
+
+          echo "Backend PID: $BACKEND_PID, Storefront PID: $STOREFRONT_PID"
+
+          # Очікування готовності backend (порт 9000)
+          for i in {1..60}; do
+            if curl -f http://localhost:9000 > /dev/null 2>&1; then
+              # -f  — curl поверне помилку при HTTP-статусах >=400 (щоб не вважати 404 "готовим")
+              # > /dev/null 2>&1 — приховуємо вивід curl, нам важливий лише код завершення
+              echo "Backend is ready"
+              break                    # виходимо з циклу очікування backend, ідемо далі
+            fi
+            echo "Waiting for backend..."
+            sleep 2
+            if [ "$i" -eq 60 ]; then
+              echo "Backend did not become ready in time"
+              exit 1                   # якщо після 60 спроб не піднявся — падаємо з помилкою
+            fi
+          done
+
+          # Очікування готовності storefront (порт 8000, конкретна сторінка /de/store)
+          for i in {1..60}; do
+            if curl -f http://localhost:8000/de/store > /dev/null 2>&1; then
+              echo "Storefront is ready"
+              break
+            fi
+            echo "Waiting for storefront..."
+            sleep 2
+            if [ "$i" -eq 60 ]; then
+              echo "Storefront did not become ready in time"
+              exit 1
+            fi
+          done
+
+      # 8. Запускаємо самі E2E-тести Playwright проти піднятих backend + storefront
       - name: Run Playwright tests
         run: npx playwright test
+
+      # 9. (Опційно, рекомендується) Зберігаємо HTML-звіт Playwright як артефакт,
+      #    щоб можна було завантажити й переглянути скріншоти/трейси при падінні тестів
+      - name: Upload Playwright report
+        if: always()    # виконати навіть якщо попередній крок (тести) впав — звіт потрібен саме тоді
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report      # назва артефакту, під якою він буде видимий в UI Actions
+          path: playwright-report/     # шлях до директорії зі звітом (стандартний вивід Playwright)
+          retention-days: 7            # скільки днів зберігати артефакт перед автоматичним видаленням
