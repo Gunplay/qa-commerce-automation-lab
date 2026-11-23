@@ -16,6 +16,15 @@ jobs:
     runs-on: ubuntu-latest        # на якій ОС/образі виконується джоба
     timeout-minutes: 20           # якщо джоба виконується довше — примусово зупиняється (захист від "зависання" на wait-циклах)
 
+    env: # Змінні середовища для всіх кроків job e2e.
+      DATABASE_URL: postgres://medusa:medusa_password@localhost:5432/medusa_db # Підключення backend до тестової БД із compose.yaml: користувач, пароль, хост, порт, назва БД.
+      STORE_CORS: http://localhost:8000 # Дозволений origin браузерних запитів магазину до Store API.
+      ADMIN_CORS: http://localhost:9000 # Дозволений origin браузерних запитів адмінпанелі до Admin API.
+      AUTH_CORS: http://localhost:8000,http://localhost:9000 # Дозволені origins магазину й адмінпанелі для API автентифікації.
+      JWT_SECRET: ci-only-jwt-secret-for-tests # Ключ підпису JWT; відкрите тестове значення лише для CI.
+      COOKIE_SECRET: ci-only-cookie-secret-for-tests # Ключ підпису cookies backend; відкрите тестове значення лише для CI.
+      NEXT_PUBLIC_MEDUSA_BACKEND_URL: http://localhost:9000 # Адреса backend для SDK і middleware storefront.
+      NEXT_PUBLIC_BASE_URL: http://localhost:8000 # Базова адреса магазину для формування посилань.
     steps:
       # 1. Клонуємо репозиторій у робочу директорію раннера
       - name: Checkout repository
@@ -46,7 +55,7 @@ jobs:
       - name: Wait for PostgreSQL
         run: |
           for i in {1..30}; do                                   # максимум 30 спроб
-            if docker compose ps postgres | grep -q "healthy"; then  # перевіряємо статус healthcheck
+            if docker compose ps postgres | grep -Fq '(healthy)'; then  # перевіряємо статус healthcheck
               echo "PostgreSQL is ready"
               exit 0                                              # успіх — виходимо з кроку з кодом 0
             fi
@@ -56,7 +65,21 @@ jobs:
           docker compose ps    # якщо цикл вичерпався — виводимо стан контейнерів для діагностики в логах
           exit 1                # завершуємо крок з помилкою, щоб job впала явно, а не тихо продовжила
 
-      # 7. Стартуємо backend і storefront у фоні ТА чекаємо їх готовності В МЕЖАХ ОДНОГО КРОКУ.
+      # 7. Створюємо схему БД і тестові дані для чистого CI-контейнера.
+      - name: Set up database
+        run: npm run db:setup
+
++     # 7b. Отримуємо publishable API key з бази даних після seed і передаємо його в середовище для наступних кроків.
++     - name: Extract publishable API key for storefront
++       run: |
++         KEY=$(docker compose exec -T postgres psql -U medusa -d medusa_db -t -c \
++           "SELECT id FROM api_keys WHERE type = 'publishable' LIMIT 1;" | tr -d '[:space:]')
++         echo "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=pk_${KEY}" >> $GITHUB_ENV
+
+      # 8. Стартуємо backend і storefront у фоні ТА чекаємо їх готовності В МЕЖАХ ОДНОГО КРОКУ.
+        run: npm run db:setup
+
+      # 8. Стартуємо backend і storefront у фоні ТА чекаємо їх готовності В МЕЖАХ ОДНОГО КРОКУ.
       #    Важливо: якщо винести "npm run dev ... &" в окремий крок, GitHub Actions
       #    може прибити фоновий процес по завершенні цього кроку (кожен run — новий shell).
       #    Тому запуск і очікування об'єднані в один run-блок.
@@ -72,7 +95,7 @@ jobs:
 
           # Очікування готовності backend (порт 9000)
           for i in {1..60}; do
-            if curl -f http://localhost:9000 > /dev/null 2>&1; then
+           if curl -f http://localhost:9000/health > /dev/null 2>&1; then
               # -f  — curl поверне помилку при HTTP-статусах >=400 (щоб не вважати 404 "готовим")
               # > /dev/null 2>&1 — приховуємо вивід curl, нам важливий лише код завершення
               echo "Backend is ready"
@@ -100,11 +123,11 @@ jobs:
             fi
           done
 
-      # 8. Запускаємо самі E2E-тести Playwright проти піднятих backend + storefront
+      # 9. Запускаємо самі E2E-тести Playwright проти піднятих backend + storefront
       - name: Run Playwright tests
         run: npx playwright test
 
-      # 9. (Опційно, рекомендується) Зберігаємо HTML-звіт Playwright як артефакт,
+      # 10. (Опційно, рекомендується) Зберігаємо HTML-звіт Playwright як артефакт,
       #    щоб можна було завантажити й переглянути скріншоти/трейси при падінні тестів
       - name: Upload Playwright report
         if: always()    # виконати навіть якщо попередній крок (тести) впав — звіт потрібен саме тоді
