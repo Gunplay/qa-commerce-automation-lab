@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="890" viewBox="0 0 1100 890" role="img" aria-labelledby="title desc">
+<title id="title">Що працює на нашому runner</title>
+<desc id="desc">Одна тимчасова машина GitHub; окрема від твого Mac.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#64748b"/></marker></defs>
+<rect width="1100" height="890" fill="#f5f8fc"/>
+<g font-family="Arial, sans-serif">
+<text x="50" y="55" font-size="28" font-weight="bold" fill="#14334e">Що працює на нашому runner</text>
+<text x="50" y="87" font-size="17" fill="#475569">Одна тимчасова машина GitHub; окрема від твого Mac.</text>
+<path d="M270,240 L270,310" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M490,380 L610,380" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<text x="562.0" y="372.0" font-size="15" fill="#475569">браузер</text>
+<path d="M830,450 L830,520" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<text x="842.0" y="477.0" font-size="15" fill="#475569">API</text>
+<path d="M610,580 L490,580" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<text x="562.0" y="572.0" font-size="15" fill="#475569">SQL</text>
+<rect x="50" y="125" width="1000" height="115" rx="14" fill="white" stroke="#2675bc" stroke-width="2"/>
+<rect x="50" y="139" width="5" height="87" fill="#2675bc"/>
+<text x="72" y="159" font-size="21" font-weight="bold" fill="#14334e">Підготовка середовища</text>
+<text x="72" y="188" font-size="17" fill="#334155">Checkout → Node.js → npm ci → Chromium → PostgreSQL → міграції та seed</text>
+<rect x="50" y="310" width="440" height="140" rx="14" fill="white" stroke="#13867d" stroke-width="2"/>
+<rect x="50" y="324" width="5" height="112" fill="#13867d"/>
+<text x="72" y="344" font-size="21" font-weight="bold" fill="#14334e">Playwright і Chromium</text>
+<text x="72" y="373" font-size="17" fill="#334155">tests/ui/registration.spec.ts</text>
+<text x="72" y="398" font-size="17" fill="#334155">RegistrationPage → дії та перевірки</text>
+<rect x="610" y="310" width="440" height="140" rx="14" fill="white" stroke="#13867d" stroke-width="2"/>
+<rect x="610" y="324" width="5" height="112" fill="#13867d"/>
+<text x="632" y="344" font-size="21" font-weight="bold" fill="#14334e">Storefront Next.js</text>
+<text x="632" y="373" font-size="17" fill="#334155">http://localhost:8000</text>
+<text x="632" y="398" font-size="17" fill="#334155">Форма реєстрації та інтерфейс</text>
+<rect x="610" y="520" width="440" height="125" rx="14" fill="white" stroke="#2675bc" stroke-width="2"/>
+<rect x="610" y="534" width="5" height="97" fill="#2675bc"/>
+<text x="632" y="554" font-size="21" font-weight="bold" fill="#14334e">Backend Medusa</text>
+<text x="632" y="583" font-size="17" fill="#334155">http://localhost:9000</text>
+<text x="632" y="608" font-size="17" fill="#334155">Store API та автентифікація</text>
+<rect x="50" y="520" width="440" height="125" rx="14" fill="white" stroke="#2675bc" stroke-width="2"/>
+<rect x="50" y="534" width="5" height="97" fill="#2675bc"/>
+<text x="72" y="554" font-size="21" font-weight="bold" fill="#14334e">PostgreSQL у Docker</text>
+<text x="72" y="583" font-size="17" fill="#334155">localhost:5432</text>
+<text x="72" y="608" font-size="17" fill="#334155">Схема й тестові дані цієї CI-бази</text>
+<rect x="50" y="715" width="1000" height="110" rx="14" fill="white" stroke="#b7791f" stroke-width="2"/>
+<rect x="50" y="729" width="5" height="82" fill="#b7791f"/>
+<text x="72" y="749" font-size="21" font-weight="bold" fill="#14334e">Після виконання</text>
+<text x="72" y="778" font-size="17" fill="#334155">Логи лишаються в GitHub; файли результату треба явно завантажити як artifacts.</text>
+<text x="50" y="862" font-size="16" fill="#475569">Порожня required-форма блокується браузером до відправлення даних.</text>
+</g></svg>

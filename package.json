@@ -5,16 +5,25 @@
   "engines": {
     "node": ">=20"
   },
-  "scripts": {
-    "dev": "turbo dev",
-    "build": "turbo build",
-    "start": "turbo start",
-    "lint": "turbo lint",
-    "test": "turbo test",
-    "backend:seed": "turbo seed --filter=@dtc/backend",
-    "backend:dev": "turbo dev --filter=@dtc/backend",
-    "storefront:dev": "turbo dev --filter=@dtc/storefront"
-  },
+ "scripts": {
+  "predev": "docker compose up -d postgres && wait-on tcp:127.0.0.1:5432 -t 60000",
+  "dev": "turbo dev",
+  "build": "turbo build",
+  "start": "turbo start",
+  "lint": "turbo lint",
+  "test": "turbo test",
+
+  "backend:seed": "turbo seed --filter=@dtc/backend",
+  "backend:dev": "turbo dev --filter=@dtc/backend",
+  "backend:migrate": "npm exec --workspace=@dtc/backend -- medusa db:migrate",
+  "storefront:dev": "turbo dev --filter=@dtc/storefront",
+
+  "infra:up": "docker compose up -d postgres && wait-on tcp:127.0.0.1:5432 -t 60000",
+  "infra:down": "docker compose down",
+  "infra:reset": "docker compose down -v",
+  "infra:logs": "docker compose logs -f postgres",
+  "db:setup": "npm run backend:migrate && npm run backend:seed"
+},
   "pnpm": {
     "overrides": {
       "@types/react": "19.0.5",
@@ -27,13 +36,17 @@
     "eslint": "^9.39.4",
     "jiti": "^2.7.0",
     "prettier": "^3.2.5",
-    "turbo": "^2.0.14"
+    "turbo": "^2.0.14",
+    "wait-on": "^8.0.1"
   },
   "workspaces": [
     "apps/**",
     "!apps/backend/.medusa/**"
   ],
   "overrides": {
-    "ajv": "^8.0.0"
+    "schema-utils": {
+      "ajv": "^6.12.4",
+      "ajv-keywords": "^3.5.2"
+    }
   }
 }

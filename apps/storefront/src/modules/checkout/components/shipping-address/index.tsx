@@ -3,7 +3,7 @@ import { Container } from "@modules/common/components/ui"
 import Checkbox from "@modules/common/components/checkbox"
 import Input from "@modules/common/components/input"
 import { mapKeys } from "lodash"
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 import AddressSelect from "../address-select"
 import CountrySelect from "../country-select"
 
@@ -45,7 +45,7 @@ const ShippingAddress = ({
     [customer?.addresses, countriesInRegion]
   )
 
-  const setFormAddress = (
+  const setFormAddress = useCallback((
     address?: HttpTypes.StoreCartAddress,
     email?: string
   ) => {
@@ -70,7 +70,7 @@ const ShippingAddress = ({
         email: email,
       }))
     }
-  }
+  }, [])
 
   useEffect(() => {
     // Ensure cart is not null and has a shipping_address before setting form data
@@ -81,7 +81,7 @@ const ShippingAddress = ({
     if (cart && !cart.email && customer?.email) {
       setFormAddress(undefined, customer.email)
     }
-  }, [cart]) // Add cart as a dependency
+  }, [cart, customer?.email, setFormAddress])
 
   const handleChange = (
     e: React.ChangeEvent<

@@ -2,6 +2,10 @@ import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: './tests/ui',
+  reporter: [
+    ['list'],
+    ['html', { open: 'never' }],
+  ],
   use: {
     baseURL: 'http://localhost:8000',
     trace: 'on-first-retry',

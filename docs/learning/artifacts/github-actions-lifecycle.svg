@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="710" viewBox="0 0 1100 710" role="img" aria-labelledby="title desc">
+<title id="title">Від локального коду до результату CI</title>
+<desc id="desc">Наш workflow запускається на GitHub після відповідної події.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#64748b"/></marker></defs>
+<rect width="1100" height="710" fill="#f5f8fc"/>
+<g font-family="Arial, sans-serif">
+<text x="50" y="55" font-size="28" font-weight="bold" fill="#14334e">Від локального коду до результату CI</text>
+<text x="50" y="87" font-size="17" fill="#475569">Наш workflow запускається на GitHub після відповідної події.</text>
+<path d="M490,190 L610,190" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M830,255 L830,320" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M610,385 L490,385" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M270,450 L270,515" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<path d="M490,575 L610,575" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+<rect x="50" y="125" width="440" height="130" rx="14" fill="white" stroke="#2675bc" stroke-width="2"/>
+<rect x="50" y="139" width="5" height="102" fill="#2675bc"/>
+<text x="72" y="159" font-size="21" font-weight="bold" fill="#14334e">1  Твій Mac</text>
+<text x="72" y="188" font-size="17" fill="#334155">Редактор → збереження → git add</text>
+<text x="72" y="213" font-size="17" fill="#334155">git commit → git push</text>
+<rect x="610" y="125" width="440" height="130" rx="14" fill="white" stroke="#2675bc" stroke-width="2"/>
+<rect x="610" y="139" width="5" height="102" fill="#2675bc"/>
+<text x="632" y="159" font-size="21" font-weight="bold" fill="#14334e">2  Репозиторій GitHub</text>
+<text x="632" y="188" font-size="17" fill="#334155">Push у feat/playwright-setup</text>
+<text x="632" y="213" font-size="17" fill="#334155">або стандартна подія pull request</text>
+<rect x="610" y="320" width="440" height="130" rx="14" fill="white" stroke="#13867d" stroke-width="2"/>
+<rect x="610" y="334" width="5" height="102" fill="#13867d"/>
+<text x="632" y="354" font-size="21" font-weight="bold" fill="#14334e">3  Workflow Playwright E2E</text>
+<text x="632" y="383" font-size="17" fill="#334155">GitHub читає .github/workflows/</text>
+<text x="632" y="408" font-size="17" fill="#334155">playwright.yml і запускає job e2e</text>
+<rect x="50" y="320" width="440" height="130" rx="14" fill="white" stroke="#13867d" stroke-width="2"/>
+<rect x="50" y="334" width="5" height="102" fill="#13867d"/>
+<text x="72" y="354" font-size="21" font-weight="bold" fill="#14334e">4  Runner Ubuntu</text>
+<text x="72" y="383" font-size="17" fill="#334155">Готує БД, backend, storefront</text>
+<text x="72" y="408" font-size="17" fill="#334155">Виконує npx playwright test</text>
+<rect x="50" y="515" width="440" height="125" rx="14" fill="white" stroke="#b7791f" stroke-width="2"/>
+<rect x="50" y="529" width="5" height="97" fill="#b7791f"/>
+<text x="72" y="549" font-size="21" font-weight="bold" fill="#14334e">5  Результат перевірок</text>
+<text x="72" y="578" font-size="17" fill="#334155">Успіх або помилка для цього run</text>
+<text x="72" y="603" font-size="17" fill="#334155">Логи та доступні артефакти</text>
+<rect x="610" y="515" width="440" height="125" rx="14" fill="white" stroke="#b7791f" stroke-width="2"/>
+<rect x="610" y="529" width="5" height="97" fill="#b7791f"/>
+<text x="632" y="549" font-size="21" font-weight="bold" fill="#14334e">6  Рішення команди</text>
+<text x="632" y="578" font-size="17" fill="#334155">Review → виправлення або merge</text>
+<text x="632" y="603" font-size="17" fill="#334155">Деплою в нашому YAML немає</text>
+<text x="50" y="682" font-size="16" fill="#475569">Збереження на Mac саме по собі не запускає GitHub Actions.</text>
+</g></svg>

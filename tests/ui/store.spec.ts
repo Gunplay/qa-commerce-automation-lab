@@ -1,13 +1,21 @@
 import { test, expect } from '@playwright/test'
+import { CatalogPage } from '../pages/CatalogPage'
 
-test('store page displays products', async ({ page }) => {
-  await page.goto('/de/store')
 
-  await expect(
-    page.getByRole('heading', { name: 'All products' })
-  ).toBeVisible()
+test.describe('Store catalog', async () => {
 
-  await expect(
-    page.getByText('Medusa T-Shirt', { exact: true })
-  ).toBeVisible()
+
+  test('store page displays products', async ({ page }) => {
+    const catalogPage = new CatalogPage(page)
+    await catalogPage.open()
+
+    await expect(
+      page.getByRole('heading', { name: 'All products' })
+    ).toBeVisible()
+
+    await expect(
+      page.getByText('Medusa T-Shirt', { exact: true })
+    ).toBeVisible()
+  })
+
 })

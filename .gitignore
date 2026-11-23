@@ -37,6 +37,10 @@ docker-data/
 # IDE
 .vscode/settings.json
 .idea/
+
+# Local Medusa CLI preferences
+.config/
+
 # TypeScript and Turborepo cache
 *.tsbuildinfo
 .turbo/
