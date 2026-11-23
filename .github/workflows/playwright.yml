@@ -78,6 +78,29 @@ jobs:
           docker compose exec -T postgres psql -U medusa -d medusa_db -c "SELECT tablename FROM pg_tables WHERE schemaname = 'public';"
           echo "=== Looking for api_key related tables ==="
           docker compose exec -T postgres psql -U medusa -d medusa_db -c "SELECT tablename FROM pg_tables WHERE tablename LIKE '%api%';"
+
+          # Спроба знайти таблицю з publishable key
+          TABLE_NAME=$(docker compose exec -T postgres psql -U medusa -d medusa_db -t -c \
+            "SELECT tablename FROM pg_tables WHERE tablename LIKE '%publishable%' OR tablename LIKE '%api_key%';" | tr -d '[:space:]')
+          echo "Found table: '$TABLE_NAME'"
+
+          if [ -n "$TABLE_NAME" ]; then
+            KEY=$(docker compose exec -T postgres psql -U medusa -d medusa_db -t -c \
+              "SELECT id FROM $TABLE_NAME WHERE type = 'publishable' LIMIT 1;" | tr -d '[:space:]')
+          else
+            # Якщо таблиця не знайдена, спробуємо api_keys як fallback
+            KEY=$(docker compose exec -T postgres psql -U medusa -d medusa_db -t -c \
+              "SELECT id FROM api_keys WHERE type = 'publishable' LIMIT 1;" | tr -d '[:space:]')
+          fi
+
+          echo "Extracted key value: '$KEY'"
+          if [ -z "$KEY" ]; then
+            echo "ERROR: No publishable API key found in database!"
+            exit 1
+          fi
+          echo "Setting NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=pk_${KEY}"
+          echo "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=pk_${KEY}" >> $GITHUB_ENV
+
       # 8. Стартуємо backend і storefront у фоні ТА чекаємо їх готовності В МЕЖАХ ОДНОГО КРОКУ.
       - name: Start backend and storefront, then wait until ready
         run: |
@@ -88,7 +111,6 @@ jobs:
           STOREFRONT_PID=$!                            # зберігаємо PID storefront-процесу
 
           echo "Backend PID: $BACKEND_PID, Storefront PID: $STOREFRONT_PID"
-
           # Очікування готовності backend (порт 9000)
           for i in {1..60}; do
            if curl -f http://localhost:9000/health > /dev/null 2>&1; then
@@ -132,6 +154,4 @@ jobs:
           name: playwright-report      # назва артефакту, під якою він буде видимий в UI Actions
           path: playwright-report/     # шлях до директорії зі звітом (стандартний вивід Playwright)
           retention-days: 7            # скільки днів зберігати артефакт перед автоматичним видаленням
-
-
 
