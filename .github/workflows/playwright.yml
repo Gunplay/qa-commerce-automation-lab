@@ -69,20 +69,14 @@ jobs:
       - name: Set up database
         run: npm run db:setup
 
-+     # 7b. Отримуємо publishable API key з бази даних після seed і передаємо його в середовище для наступних кроків.
-+     - name: Extract publishable API key for storefront
-+       run: |
-+         KEY=$(docker compose exec -T postgres psql -U medusa -d medusa_db -t -c \
-+           "SELECT id FROM api_keys WHERE type = 'publishable' LIMIT 1;" | tr -d '[:space:]')
-+         echo "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=pk_${KEY}" >> $GITHUB_ENV
+      # 7b. Отримуємо publishable API key з бази даних після seed і передаємо його в середовище для наступних кроків.
+      - name: Extract publishable API key for storefront
+        run: |
+          KEY=$(docker compose exec -T postgres psql -U medusa -d medusa_db -t -c \
+            "SELECT id FROM api_keys WHERE type = 'publishable' LIMIT 1;" | tr -d '[:space:]')
+          echo "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=pk_${KEY}" >> $GITHUB_ENV
 
       # 8. Стартуємо backend і storefront у фоні ТА чекаємо їх готовності В МЕЖАХ ОДНОГО КРОКУ.
-        run: npm run db:setup
-
-      # 8. Стартуємо backend і storefront у фоні ТА чекаємо їх готовності В МЕЖАХ ОДНОГО КРОКУ.
-      #    Важливо: якщо винести "npm run dev ... &" в окремий крок, GitHub Actions
-      #    може прибити фоновий процес по завершенні цього кроку (кожен run — новий shell).
-      #    Тому запуск і очікування об'єднані в один run-блок.
       - name: Start backend and storefront, then wait until ready
         run: |
           npm run dev --workspace=apps/backend &     # запускаємо backend у фоні (& = фоновий процес)
@@ -136,3 +130,4 @@ jobs:
           name: playwright-report      # назва артефакту, під якою він буде видимий в UI Actions
           path: playwright-report/     # шлях до директорії зі звітом (стандартний вивід Playwright)
           retention-days: 7            # скільки днів зберігати артефакт перед автоматичним видаленням
+
