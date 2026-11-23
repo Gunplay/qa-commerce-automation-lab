@@ -20,7 +20,7 @@ jobs:
       DATABASE_URL: postgres://medusa:medusa_password@localhost:5432/medusa_db # Підключення backend до тестової БД із compose.yaml: користувач, пароль, хост, порт, назва БД.
       STORE_CORS: http://localhost:8000 # Дозволений origin браузерних запитів магазину до Store API.
       ADMIN_CORS: http://localhost:9000 # Дозволений origin браузерних запитів адмінпанелі до Admin API.
-      AUTH_CORS: http://localhost:8000,http://localhost:9000 # Дозволені origins магазину й адмінпанелі для API автентифікації.
+      AUTH_CORS: http://localhost:8000,http://localhost:9000 # Дозволені origins магазину й адмінінелі для API автентифікації.
       JWT_SECRET: ci-only-jwt-secret-for-tests # Ключ підпису JWT; відкрите тестове значення лише для CI.
       COOKIE_SECRET: ci-only-cookie-secret-for-tests # Ключ підпису cookies backend; відкрите тестове значення лише для CI.
       NEXT_PUBLIC_MEDUSA_BACKEND_URL: http://localhost:9000 # Адреса backend для SDK і middleware storefront.
@@ -67,7 +67,9 @@ jobs:
 
       # 7. Створюємо схему БД і тестові дані для чистого CI-контейнера.
       - name: Set up database
-        run: npm run db:setup
+        run: |
+          npm exec --workspace=@dtc/backend -- medusa db:migrate
+          npm exec --workspace=@dtc/backend -- medusa exec ./src/scripts/seed.ts
 
       # 7b. Отримуємо publishable API key з бази даних після seed і передаємо його в середовище для наступних кроків.
       - name: Extract publishable API key for storefront
