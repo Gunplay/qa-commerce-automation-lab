@@ -74,8 +74,15 @@ jobs:
       # 7b. Отримуємо publishable API key з бази даних після seed і передаємо його в середовище для наступних кроків.
       - name: Extract publishable API key for storefront
         run: |
+          echo "=== Debug: Listing all api_keys ==="
+          docker compose exec -T postgres psql -U medusa -d medusa_db -c "SELECT id, type, title FROM api_keys;"
           KEY=$(docker compose exec -T postgres psql -U medusa -d medusa_db -t -c \
             "SELECT id FROM api_keys WHERE type = 'publishable' LIMIT 1;" | tr -d '[:space:]')
+          echo "Extracted key value: '$KEY'"
+          if [ -z "$KEY" ]; then
+            echo "ERROR: No publishable API key found in database!"
+            exit 1
+          fi
           echo "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=pk_${KEY}" >> $GITHUB_ENV
 
       # 8. Стартуємо backend і storefront у фоні ТА чекаємо їх готовності В МЕЖАХ ОДНОГО КРОКУ.
@@ -132,4 +139,5 @@ jobs:
           name: playwright-report      # назва артефакту, під якою він буде видимий в UI Actions
           path: playwright-report/     # шлях до директорії зі звітом (стандартний вивід Playwright)
           retention-days: 7            # скільки днів зберігати артефакт перед автоматичним видаленням
+
 
